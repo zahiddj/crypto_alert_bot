@@ -10,7 +10,7 @@ import requests
 import threading
 import time
 
-TOKEN = 'YOUR_TELEGRAM_BOT_TOKEN'  # Replace with your Telegram bot token
+TOKEN = '7960216185:AAHNL7go4ADuP9hhSIhA-bNXtLQCI3jJg4o'  # Replace with your Telegram bot token
 
 user_alerts = {}
 
