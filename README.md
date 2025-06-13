@@ -23,3 +23,16 @@ A simple Telegram bot to get price alerts for cryptocurrencies using the CoinGec
 
 ```bash
 pip install -r requirements.txt
+
+
+Usage
+/start - Show welcome message.
+
+/subscribe <coin> <price> - Set an alert.
+Example: /subscribe bitcoin 30000
+
+/list - List your active alerts.
+
+Send coin symbol like BTC to get the current price.
+
+
