@@ -5,7 +5,7 @@
 
 import logging
 from telegram import Update
-from telegram.ext import Updater, CommandHandler, CallbackContext
+from telegram.ext import Updater, CommandHandler, CallbackContext, MessageHandler, Filters
 import requests
 import threading
 import time
@@ -14,10 +14,26 @@ TOKEN = 'YOUR_TELEGRAM_BOT_TOKEN'  # Replace with your Telegram bot token
 
 user_alerts = {}
 
+# Simple mapping from common symbols to CoinGecko IDs
+SYMBOL_TO_ID = {
+    "btc": "bitcoin",
+    "eth": "ethereum",
+    "bnb": "binancecoin",
+    "usdt": "tether",
+    "ada": "cardano",
+    "doge": "dogecoin",
+    "xrp": "ripple",
+    "dot": "polkadot",
+    "sol": "solana",
+    "ltc": "litecoin",
+    # add more as needed
+}
+
 def start(update: Update, context: CallbackContext):
     update.message.reply_text(
         "Welcome! Use /subscribe <coin_id> <target_price> to get price alerts.\n"
-        "Example: /subscribe bitcoin 30000"
+        "Example: /subscribe bitcoin 30000\n\n"
+        "To check current price, just send the coin symbol (like BTC or ETH)."
     )
 
 def subscribe(update: Update, context: CallbackContext):
@@ -64,9 +80,22 @@ def price_check_loop(bot):
                     continue
                 if current_price <= target:
                     bot.send_message(chat_id=chat_id, text=f"🚨 Alert! {coin} price is now ${current_price} <= your target ${target}")
-                    # Uncomment the next line if you want to remove alert after trigger
+                    # Uncomment next line if you want to remove alert after trigger
                     # del alerts[coin]
         time.sleep(60)
+
+def handle_message(update: Update, context: CallbackContext):
+    text = update.message.text.strip().lower()
+    coin_id = SYMBOL_TO_ID.get(text)
+    if coin_id:
+        price = fetch_price(coin_id)
+        if price is None:
+            update.message.reply_text(f"Could not fetch price for {text.upper()} right now. Try again later.")
+        else:
+            update.message.reply_text(f"The current price of {text.upper()} is ${price}")
+    else:
+        # Optional: Comment out the line below if you don't want a reply on unknown texts
+        update.message.reply_text("Send a coin symbol like BTC or ETH to get current price.")
 
 def main():
     updater = Updater(TOKEN)
@@ -75,6 +104,9 @@ def main():
     dispatcher.add_handler(CommandHandler("start", start))
     dispatcher.add_handler(CommandHandler("subscribe", subscribe))
     dispatcher.add_handler(CommandHandler("list", list_alerts))
+
+    # Handle plain text messages (not commands)
+    dispatcher.add_handler(MessageHandler(Filters.text & ~Filters.command, handle_message))
 
     updater.start_polling()
 
